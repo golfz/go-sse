@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -17,5 +18,17 @@ func handlerRequest() {
 
 func sseHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	fmt.Fprintln(w, "Hello")
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+
+	w.WriteHeader(http.StatusOK)
+
+	count := 1
+
+	for {
+		fmt.Fprintf(w, "data: %d\n\n", count)
+		w.(http.Flusher).Flush()
+		count += 1
+		time.Sleep(2 * time.Second)
+	}
 }
