@@ -1,19 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 )
 
-func main() {
-	handlerRequest()
-}
-
-func handlerRequest() {
-	http.HandleFunc("/sse", sseHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+type CountNumber struct {
+	Number int       `json:"number"`
+	Time   time.Time `json:"time"`
 }
 
 func sseHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +23,25 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	count := 1
 
 	for {
-		fmt.Fprintf(w, "data: %d\n\n", count)
+		d := CountNumber{
+			Number: count,
+			Time:   time.Now(),
+		}
+
+		s, _ := json.Marshal(d)
+
+		fmt.Fprintf(w, "data: %s\n\n", s)
 		w.(http.Flusher).Flush()
 		count += 1
 		time.Sleep(2 * time.Second)
 	}
+}
+
+func handlerRequest() {
+	http.HandleFunc("/sse", sseHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func main() {
+	handlerRequest()
 }
